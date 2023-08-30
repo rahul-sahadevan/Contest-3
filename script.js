@@ -2,10 +2,16 @@
 
 const url = "https://raw.githubusercontent.com/saksham-accio/f2_contest_3/main/food.json";
 // fetching the data from the server using fetch keyword
-let response = fetch(url);
 
 // getMenu() function to get all the data from the server
+document.addEventListener("DOMContentLoaded",() =>{
+   getMenu();
+   const press = document.getElementById("butt");
+   press.addEventListener("click",mainFunction);
+})
 function getMenu(){
+    let arr = [];
+    let response = fetch(url);
     let res = response.then((data) =>{
         // using json to get the data packets
     let res = data.json();
@@ -13,6 +19,7 @@ function getMenu(){
             // creating more menu items using the array of objects
             const burgur = document.querySelector(".burgur");
             for(let i =0;i<d.length;i++){
+                arr.push(d[i]);
                 const div = document.createElement("div");
                 div.classList.add("bur");
                 const img_div = document.createElement("div");
@@ -56,75 +63,82 @@ function getMenu(){
 
 
 
+                
             }
         })
     })
+    return arr;
 }
 // calling getMenu()
-getMenu();
 
 
 // adding eventlistner for the + button  click any of the fisrt burgur + to get the desired result
-const plus = document.querySelectorAll(".pluss")
-for(let i =0;i<plus.length;i++){
-    const add_button = plus[i];
-
-    add_button.addEventListener("click",() =>{
-        const link = "https://raw.githubusercontent.com/saksham-accio/f2_contest_3/main/food.json";
-        const response1 = fetch(link);
-        let random_burgors=[];
-        let res = response1.then((data) =>{
-            let arr = data.json();
-            
-            arr.then((data) =>{
-               
-                random_burgors.push(data[8].name);
-                random_burgors.push(data[24].name);
-                random_burgors.push(data[18].name);
-                console.log(random_burgors);
-            })
-    
-        })
-        // take order function
-        function TakeOrder(){
-           return new Promise((resolve)=>{
-            setTimeout(() =>{
-                const order = {
-                    burgur:random_burgors
-                }
-                resolve(true);
-            },2500)
-           })
-           
+function getRandomFood(data) {
+    const all_food = data;
+    const order = [];
+    for (let i = 0; i < 3; i++) {
+      let ri = Math.floor(Math.random() * data.length);
+      order.push(all_food[ri]);
+    }
+    return order;
+  }
+  
+  function TakeOrder(data) {
+    return new Promise((resolve, reject) => {
+      var order = getRandomFood(data);
+      setTimeout(() => {
+        resolve(order);
+      }, 2500);
+    });
+  }
+  
+  function orderPrep() {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        console.log({ order_status: true, paid: false });
+        resolve({ order_status: true, paid: false });
+      }, 1500);
+    });
+  }
+  
+  function payOrder() {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        console.log({ order_status: true, paid: true });
+        resolve({ order_status: true, paid: true });
+      }, 1000);
+    });
+  }
+  function thankyouFnc() {
+    alert("thankyou for eating with us today!");
+  }
+  
+  function mainFunction() {
+    // get the data
+    // adding the promises or writing the chain
+    fetch(
+      "https://raw.githubusercontent.com/saksham-accio/f2_contest_3/main/food.json"
+    )
+      .then((response) => response.json())
+      .then((data) => TakeOrder(data))
+      .then((order) => {
+        console.log(order);
+        return order;
+      })
+      .then((order) => orderPrep())
+      .then((status) => {
+        if (status.order_status) {
+          return payOrder();
+        } else {
+          throw new Error("Problem in making the order");
         }
-        TakeOrder();
-        // orderpep funtion using normal promise chainig
-        function orderPrep(){
-            return new Promise((resolve) =>{
-                setTimeout(() =>{
-                    let order_pp = {};
-                    order_pp.order_status = true;
-                    order_pp.paid = false;
-                    console.log(order_pp);
-                    resolve(order_pp);
-                },1500)
-            })
+      })
+      .then((status) => {
+        if (status.paid) {
+          thankyouFnc();
+        } else {
+          throw new Error("Payment declined/failed.");
         }
-        let x = orderPrep();
-        let y = x.then((data) =>{
-            return new Promise((resolve) =>{
-                setTimeout(() =>{
-                    data.order_status = true;
-                    data.paid = true;
-                    console.log(data);
-                    resolve(data);
-                },1000)
-            })
-        })
-         y.then((data) =>{
-            if(data.paid === true){
-                return alert("Payment Done Successfully");
-            }
-         })
-    })
-}
+      })
+      .catch((err) => console.error(err));
+  }
